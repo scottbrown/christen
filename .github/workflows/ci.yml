@@ -39,6 +39,12 @@ jobs:
       - name: Check inline Lambda handler
         run: python3 scripts/check_handler.py cfn-template.yml
 
+      # The Terraform module carries its own copy of the handler, because
+      # Terraform cannot read it out of the template.  This fails if the
+      # copy has drifted from the template.
+      - name: Check Terraform handler matches the template
+        run: python3 scripts/check_terraform_handler.py
+
   test:
     name: Test handler
     runs-on: ubuntu-latest
@@ -56,3 +62,39 @@ jobs:
       # boto3 mocked, so the template stays the single source of truth.
       - name: Run tests
         run: pytest tests/ -v
+
+  terraform:
+    name: Terraform module
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: terraform-linters/setup-tflint@v4
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive -diff
+
+      - name: Init
+        run: terraform init -backend=false -input=false
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Lint
+        run: |
+          tflint --init
+          tflint --recursive
+        env:
+          # tflint --init downloads its rulesets from GitHub, which rate
+          # limits anonymous requests.
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Plan-only tests against a mocked AWS provider: no credentials are
+      # needed and nothing is created.
+      - name: Test
+        run: terraform test

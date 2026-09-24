@@ -108,10 +108,12 @@ donny-staging-029d0202d1a
 ## Requirements
 
 * An Amazon Web Services account
-* The AWS CLI, configured with credentials
+* The AWS CLI, configured with credentials, or Terraform 1.7+ with AWS
+  provider 6.0+ to use the Terraform module instead
 * Permissions to create AWS resources:
 
-  Specifically: CloudFormation, EventBridge, Lambda, IAM roles
+  Specifically: CloudFormation (not needed for Terraform), EventBridge,
+  Lambda, IAM roles
 
 ## Deploying
 
@@ -159,6 +161,42 @@ The stack name, environment label, and parameters are all variables at the
 top of `Taskfile.yml`, and any of them can be overridden on the command
 line as shown above.
 
+### Deploying with Terraform
+
+The `terraform/` directory holds a module that creates the same resources
+without CloudFormation.  Reference it from your own configuration:
+
+```hcl
+module "asg_instance_naming" {
+  source = "github.com/scottbrown/aws-name-asg-instances//terraform?ref=main"
+
+  # All optional.  The defaults match the CloudFormation template.
+  regions             = ["us-east-1", "eu-west-1"]
+  project_tag_key     = "project"
+  environment_tag_key = "environment"
+  name_format         = "{project}-{environment}-{instance_id}"
+}
+```
+
+Pin `ref` to a tag or commit rather than `main` for repeatable deploys.
+
+With `regions` left empty, the module deploys only into the AWS provider's
+region.  With a list, it deploys the rule and function into each region
+from the one provider block.  The IAM role is global and is created only
+once, shared by every region.
+
+| Variable | Default | Description |
+|---|---|---|
+| `regions` | `[]` | Regions to deploy into; empty means the provider's region |
+| `project_tag_key` | `project` | Tag that supplies `{project}` |
+| `environment_tag_key` | `environment` | Tag that supplies `{environment}` |
+| `name_format` | `{project}-{environment}-{instance_id}` | Format of the `Name` tag |
+| `name` | `asg-instance-namer` | Name of the role, function and rule |
+| `tags` | `{}` | Tags applied to every resource |
+
+Outputs are `role_arn`, and `function_arns` and `rule_arns` keyed by
+region.
+
 ## Removing
 
 ```
@@ -172,6 +210,9 @@ $ task delete                       # one region, waits for completion
 $ task delete:all                   # every region, does not wait
 ```
 
+For the Terraform module, remove the `module` block and apply, or run
+`terraform destroy`.
+
 ## Development
 
 The Lambda function is defined inline in `cfn-template.yml` so that the
@@ -183,6 +224,21 @@ To check the template before deploying:
 ```
 $ task validate                     # aws cloudformation validate-template
 $ task lint                         # cfn-lint, if installed
+```
+
+The Terraform module cannot read the handler out of the template, so it
+carries a copy in `terraform/handler.py`.  The template stays the source of
+truth: after editing the handler there, update the copy, or CI fails:
+
+```
+$ python3 scripts/check_terraform_handler.py --fix
+```
+
+The module has plan-only tests against a mocked AWS provider, which need
+no credentials:
+
+```
+$ cd terraform && terraform init && terraform test
 ```
 
 `example-payloads/cloudwatch-event.json` contains a real AutoScaling launch
