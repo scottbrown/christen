@@ -1,0 +1,14 @@
+---
+# Only GitHub Actions are tracked.  The Python tools installed in CI are
+# deliberately unpinned (see .github/workflows/ci.yml) and there is no
+# requirements file, so there is nothing for the pip ecosystem to update.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
