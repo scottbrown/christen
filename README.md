@@ -168,7 +168,7 @@ without CloudFormation.  Reference it from your own configuration:
 
 ```hcl
 module "asg_instance_naming" {
-  source = "github.com/scottbrown/aws-name-asg-instances//terraform?ref=main"
+  source = "github.com/scottbrown/christen//terraform?ref=main"
 
   # All optional.  The defaults match the CloudFormation template.
   regions             = ["us-east-1", "eu-west-1"]
