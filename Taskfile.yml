@@ -13,8 +13,8 @@ version: '3'
 
 vars:
   # Base name for the CloudFormation stack.  The environment is appended
-  # to it, producing e.g. "asg-name-instances-production".
-  PROJECT_NAME: asg-name-instances
+  # to it, producing e.g. "christen-production".
+  PROJECT_NAME: christen
 
   # Label for the environment this stack is deployed into.
   ENVIRONMENT: dev
