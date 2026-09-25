@@ -1,0 +1,4 @@
+build/
+.terraform/
+# A reusable module leaves provider locking to the root module that calls it.
+.terraform.lock.hcl
