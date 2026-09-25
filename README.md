@@ -1,4 +1,4 @@
-# aws-name-asg-instances
+# christen
 
 Automatically apply Name tags to instances in an ASG based on their custom
 tags.
@@ -83,7 +83,7 @@ and `stage` would deploy with:
 ```
 $ aws cloudformation deploy \
     --template-file cfn-template.yml \
-    --stack-name asg-name-instances \
+    --stack-name christen \
     --region us-east-1 \
     --capabilities CAPABILITY_NAMED_IAM \
     --parameter-overrides ProjectTagKey=service EnvironmentTagKey=stage
@@ -122,7 +122,7 @@ its members named:
 ```
 $ aws cloudformation deploy \
     --template-file cfn-template.yml \
-    --stack-name asg-name-instances \
+    --stack-name christen \
     --region us-east-1 \
     --capabilities CAPABILITY_NAMED_IAM
 ```
@@ -162,7 +162,7 @@ line as shown above.
 ## Removing
 
 ```
-$ aws cloudformation delete-stack --stack-name asg-name-instances --region us-east-1
+$ aws cloudformation delete-stack --stack-name christen --region us-east-1
 ```
 
 Or, with Task:
